@@ -16,72 +16,74 @@ app = Flask(__name__)
 # In[2]:
 
 
-#Helper Methods for creating Dataframe object
+# Helper Methods for creating Dataframe object
 default_columns = {
-  "lot": { "lotSize1": -1 },
-  "address": {
-    "country": "",
-    "countrySubd": "",
-    "line1": "",
-    "line2": "",
-    "locality": "",
-    "matchCode": "",
-    "oneLine": "",
-    "postal1": "",
-  },
-  "location": {
-    "accuracy": "",
-    "elevation": -1,
-    "latitude": "",
-    "longitude": "",
-    "distance": -1,
-    "geoid": ""
-  },
-  "summary": {
-    "yearbuilt": -1,
-  },
-  "building": {
-    "size": { "universalsize": -1 },
-    "rooms": { "bathstotal": -1, "beds": -1 }
-  },
-  "sale": {
-    "salesearchdate": "",
-    "saleTransDate": "",
-    "amount": {
-      "saleamt": -1,
-      "salerecdate": "",
-      "saledisclosuretype": -1,
-      "saledocnum": "",
-      "saletranstype": ""
+    "lot": {"lotSize1": -1},
+    "address": {
+        "country": "",
+        "countrySubd": "",
+        "line1": "",
+        "line2": "",
+        "locality": "",
+        "matchCode": "",
+        "oneLine": "",
+        "postal1": "",
     },
-    "calculation": { "priceperbed": 0, "pricepersizeunit": 0 }
-  }
+    "location": {
+        "accuracy": "",
+        "elevation": -1,
+        "latitude": "",
+        "longitude": "",
+        "distance": -1,
+        "geoid": ""
+    },
+    "summary": {
+        "yearbuilt": -1,
+    },
+    "building": {
+        "size": {"universalsize": -1},
+        "rooms": {"bathstotal": -1, "beds": -1}
+    },
+    "sale": {
+        "salesearchdate": "",
+        "saleTransDate": "",
+        "amount": {
+            "saleamt": -1,
+            "salerecdate": "",
+            "saledisclosuretype": -1,
+            "saledocnum": "",
+            "saletranstype": ""
+        },
+        "calculation": {"priceperbed": 0, "pricepersizeunit": 0}
+    }
 }
+
 
 def getkeys(obj: Dict, stack: List[str]):
     for k, v in obj.items():
-        k2 = [k] + stack # don't return empty keys
+        k2 = [k] + stack  # don't return empty keys
         if v and isinstance(v, dict):
             for c in getkeys(v, k2):
                 yield c
-        else: # leaf
+        else:  # leaf
             yield k2
 
 
 def getvalues(obj):
-    for k,v in obj.items():
-        if not v and not isinstance(v, int): [0]
+    for k, v in obj.items():
+        if not v and not isinstance(v, int):
+            [0]
         if isinstance(v, dict):
             for c in getvalues(v):
                 yield c
-        else: # leaf
-              yield v if isinstance(v, list) else [v]
+        else:  # leaf
+            yield v if isinstance(v, list) else [v]
 
 
 # In[3]:
 
 
-#store json file to DataFrame object
+# store json file to DataFrame object
 def json_to_dataframe(properties):
     colunms = list(getkeys(default_columns, []))
     row = []
@@ -101,12 +103,13 @@ def json_to_dataframe(properties):
                 values.append(val)
 
         row.append(values)
-    df = pd.DataFrame(row, columns=list(map(lambda l: "/".join(l[::-1]), list(getkeys(default_columns, [])))))
+    df = pd.DataFrame(row, columns=list(
+        map(lambda l: "/".join(l[::-1]), list(getkeys(default_columns, [])))))
     return df
 
 
-#Store api call to local json file
-def api_call(zipcode,city, radius):
+# Store api call to local json file
+def api_call(zipcode, city, radius):
     properties = []
     for i in range(5):
         url = 'https://api.gateway.attomdata.com/propertyapi/v1.0.0/sale/snapshot'
@@ -145,7 +148,7 @@ def get_paragraph_res(payment, low, med):
         return "You have an okay payment, with some effort you can find cheaper housing"
     else:
         return "You have an average or above average payment, you can easily find cheaper housing in your area"
-    
+
 
 def get_tags(payment, low, med):
     if payment < low:
@@ -154,11 +157,11 @@ def get_tags(payment, low, med):
         return "Great Deal"
     else:
         return "Bad Deal"
-    
-    
+
+
 def get_cheap_nearby_locations(low, df):
     loc_ans = []
-    df1 = df[(df['sale/amount/saleamt'] < low) ]
+    df1 = df[(df['sale/amount/saleamt'] < low)]
     i = 0
     for index, row in df1.iterrows():
         if i > 4:
@@ -173,20 +176,24 @@ def get_cheap_nearby_locations(low, df):
             bath = 1
         b['beds'] = beds
         b['baths'] = bath
-        b['amount'] = row['sale/amount/saleamt'] 
+        b['amount'] = row['sale/amount/saleamt']
         loc_ans.append(b)
         i += 1
     return loc_ans
 # priceComparison(zipcode, payment, beds?, bath?, radius?) : (low, mean. High, String)
 # def priceComparison(zipcode, payment, beds, bath, current_payment, radius):
 
+
 def priceComparison(zipcode, radius, cur_beds, cur_baths, current_payment):
     ans = {}
-    bleh = requests.get(f"https://www.zipcodeapi.com/rest/EWxydk95XP16TvGogrB222ZL6QSFmoG4SPSscUxWJN77bPNrCIONUAOP6R4BnH7W/info.json/{zipcode}/degrees")
+    bleh = requests.get(
+        f"https://www.zipcodeapi.com/rest/EWxydk95XP16TvGogrB222ZL6QSFmoG4SPSscUxWJN77bPNrCIONUAOP6R4BnH7W/info.json/{zipcode}/degrees")
     city = bleh.json()["city"]
     df = api_call(zipcode, city, radius)
-    df_filtered = df.filter(items=['address/line1', 'address/line2', 'sale/amount/saleamt', 'sale/calculation/pricepersizeunit'])
-    df1 = df_filtered[(df_filtered['sale/amount/saleamt'] > 50000) & (df_filtered['sale/amount/saleamt'] < 1000000)]
+    df_filtered = df.filter(items=['address/line1', 'address/line2',
+                                   'sale/amount/saleamt', 'sale/calculation/pricepersizeunit'])
+    df1 = df_filtered[(df_filtered['sale/amount/saleamt'] > 50000)
+                      & (df_filtered['sale/amount/saleamt'] < 1000000)]
     std = df1['sale/amount/saleamt'].std()
     ans['low'] = df1['sale/amount/saleamt'].quantile(0.05)
     ans['med'] = df1['sale/amount/saleamt'].quantile(0.11)
@@ -197,6 +204,7 @@ def priceComparison(zipcode, radius, cur_beds, cur_baths, current_payment):
     ans['tag'] = get_tags(current_payment, ans['low'], ans['med'])
     ans['current_payment'] = current_payment
     return ans
+
 
 @app.route("/", methods=["POST"])
 def hello():
@@ -213,3 +221,7 @@ def hello():
 @app.route("/test")
 def test():
     return "test"
+
+
+if __name__ == "__main__":
+    app.run(debug=False)
