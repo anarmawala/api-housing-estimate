@@ -1,5 +1,7 @@
 from flask import Flask
 from flask import request
+from flask_cors import CORS
+
 # coding: utf-8
 
 # In[1]:
@@ -12,6 +14,7 @@ import pandas as pd
 
 
 app = Flask(__name__)
+CORS(app)
 
 # In[2]:
 
