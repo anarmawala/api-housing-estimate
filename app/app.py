@@ -118,7 +118,7 @@ def api_call(zipcode, city, radius):
         url = 'https://api.gateway.attomdata.com/propertyapi/v1.0.0/sale/snapshot'
 
         headers = {'Accept': 'application/json',
-                   'apiKey': '2b57389fcd206f6e1107f4bab01213b4'}
+                   'apiKey': 'f9ad43f4b6443dfe3592331b5294ee87'}
         payload = {
             'address1': city,
             'address2': zipcode,
