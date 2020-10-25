@@ -219,10 +219,10 @@ def hello():
     cur_beds = int(req_data["beds"])
     cur_baths = int(req_data["baths"])
     radi = int(req_data["radius"])
-    return str(priceComparison(zipcode, radi, cur_beds, cur_baths, current_payment))
+    return json.dumps(priceComparison(zipcode, radi, cur_beds, cur_baths, current_payment))
 
 
-@app.route("/test")
+@ app.route("/test")
 def test():
     return "test"
 
