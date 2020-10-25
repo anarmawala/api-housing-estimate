@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask import request
 from flask_cors import CORS, cross_origin
 
@@ -219,7 +219,7 @@ def hello():
     cur_beds = int(req_data["beds"])
     cur_baths = int(req_data["baths"])
     radi = int(req_data["radius"])
-    return json.dumps(priceComparison(zipcode, radi, cur_beds, cur_baths, current_payment))
+    return jsonify(priceComparison(zipcode, radi, cur_beds, cur_baths, current_payment))
 
 
 @ app.route("/test")
