@@ -1,6 +1,6 @@
 from flask import Flask
 from flask import request
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 
 # coding: utf-8
 
@@ -210,6 +210,7 @@ def priceComparison(zipcode, radius, cur_beds, cur_baths, current_payment):
 
 
 @app.route("/", methods=["POST"])
+@cross_origin()
 def hello():
     req_data = request.get_json()
     city = str(req_data["city"])
